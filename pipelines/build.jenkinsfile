@@ -26,6 +26,8 @@ pipeline {
         NEXUS_RELEASE_REPOSITORY = "releases"
         // Repository where we will upload the snapshot artifact
         NEXUS_SNAPSHOT_REPOSITORY = "snapshots"
+        // Repository where we will upload the snapshot artifact
+        NEXUS_SNAPSHOT_REPOSITORY_URL = "http://nexusDocker:18081/nexus/content/repositories/snapshots/"
         // Jenkins credential id to authenticate to Nexus OSS
         NEXUS_CREDENTIAL_ID = "nexus-credentials"
     }
@@ -62,10 +64,17 @@ pipeline {
         stage("publish to nexus") {
             steps {
                 script {
+                    echo "start deployment to repository"
                     // Read POM xml file using 'readMavenPom' step , this step 'readMavenPom' is included in: https://plugins.jenkins.io/pipeline-utility-steps
                     pom = readMavenPom file: "pom.xml";
+                    //mule runtime version
+                    muleRuntimeVersion = pom.properties.'mule.version' ?: pom.properties.'app.runtime'
+                    echo "muleRuntimeVersion=${muleRuntimeVersion}"
+                    //mule packaging type
+                    mulePackageType = (muleRuntimeVersion.startsWith("3.*.*")) ? "zip": "jar"
+                    echo "mulePackageType=${mulePackageType}"
                     // Find built artifact under target folder
-                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
+                    filesByGlob = findFiles(glob: "target/*.${mulePackageType}");
                     // Print some info from the artifact found
                     echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
                     // Extract the path from the File found
@@ -74,27 +83,9 @@ pipeline {
                     artifactExists = fileExists artifactPath;
                     if(artifactExists) {
                         echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
-                        nexusArtifactUploader(
-                            nexusVersion: NEXUS_VERSION,
-                            protocol: NEXUS_PROTOCOL,
-                            nexusUrl: NEXUS_URL,
-                            groupId: pom.groupId,
-                            version: pom.version,
-                            repository: NEXUS_SNAPSHOT_REPOSITORY,
-                            credentialsId: NEXUS_CREDENTIAL_ID,
-                            artifacts: [
-                                // Artifact generated such as .jar, .ear and .war files.
-                                [artifactId: pom.artifactId,
-                                classifier: '',
-                                file: artifactPath,
-                                type: pom.packaging],
-                                // Lets upload the pom.xml file for additional information for Transitive dependencies
-                                [artifactId: pom.artifactId,
-                                classifier: '',
-                                file: "pom.xml",
-                                type: "pom"]
-                            ]
-                        );
+
+                        sh "mvn deploy:deploy-file -DgroupId=${pom.groupId} -DartifactId=${pom.artifactId} -Dversion=${pom.version} -Dpackaging=${mulePackageType} -Dfile=${artifactPath} -DrepositoryId=${NEXUS_SNAPSHOT_REPOSITORY} -Durl=${NEXUS_SNAPSHOT_REPOSITORY_URL} -DgeneratePom=false -Dmaven.install.skip=true"
+
                     } else {
                         error "*** File: ${artifactPath}, could not be found";
                     }
