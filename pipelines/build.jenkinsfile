@@ -15,7 +15,7 @@ pipeline {
 
     environment {
         //Jenkins credential id to authenticate to GIT Lab
-        GIT_CREDENTIAL_ID = "bitbucket"
+        GIT_CREDENTIAL_ID = "bitbucket-credentials"
         // This can be nexus3 or nexus2
         NEXUS_VERSION = "nexus3"
         // This can be http or https
