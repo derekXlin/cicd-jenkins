@@ -16,20 +16,17 @@ pipeline {
     environment {
         //Jenkins credential id to authenticate to GIT Lab
         GIT_CREDENTIAL_ID = "bitbucket-credentials"
-        // This can be nexus3 or nexus2
-        NEXUS_VERSION = "nexus3"
-        // This can be http or https
-        NEXUS_PROTOCOL = "http"
-        // Where your Nexus is running
-        NEXUS_URL = "nexusDocker:8081"
-        // Repository where we will upload the release artifact
-        NEXUS_RELEASE_REPOSITORY = "releases"
-        // Repository where we will upload the snapshot artifact
-        NEXUS_SNAPSHOT_REPOSITORY = "snapshots"
-        // Repository where we will upload the snapshot artifact
-        NEXUS_SNAPSHOT_REPOSITORY_URL = "http://nexusDocker:18081/nexus/content/repositories/snapshots/"
         // Jenkins credential id to authenticate to Nexus OSS
         NEXUS_CREDENTIAL_ID = "nexus-credentials"
+        // Repository where we will upload the snapshot artifact
+        NEXUS_RELEASE_REPOSITORY_ID = "local-docker-nexus"
+        // Repository where we will upload the snapshot artifact
+        NEXUS_RELEASE_REPOSITORY_URL = "http://nexusDocker:8081/nexus/content/repositories/releases/"
+        // Repository where we will upload the snapshot artifact
+        NEXUS_SNAPSHOT_REPOSITORY_ID = "local-docker-nexus-snapshots"
+        // Repository where we will upload the snapshot artifact
+        NEXUS_SNAPSHOT_REPOSITORY_URL = "http://nexusDocker:8081/nexus/content/repositories/snapshots/"
+
     }
 
 
@@ -73,6 +70,8 @@ pipeline {
                     //mule packaging type
                     mulePackageType = (muleRuntimeVersion.startsWith("3.*.*")) ? "zip": "jar"
                     echo "mulePackageType=${mulePackageType}"
+                    target_repo_id = (pom.version.endsWith("SNAPSHOT"))? "${NEXUS_SNAPSHOT_REPOSITORY_ID}":"${NEXUS_RELEASE_REPOSITORY_ID}"
+                    target_repo_url = (pom.version.endsWith("SNAPSHOT"))? "${NEXUS_SNAPSHOT_REPOSITORY_URL}" : "${NEXUS_RELEASE_REPOSITORY_URL}"
                     // Find built artifact under target folder
                     filesByGlob = findFiles(glob: "target/*.${mulePackageType}");
                     // Print some info from the artifact found
@@ -82,9 +81,9 @@ pipeline {
                     // Assign to a boolean response verifying If the artifact name exists
                     artifactExists = fileExists artifactPath;
                     if(artifactExists) {
-                        echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
+                        echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version: ${pom.version} repo: ${target_repo_id}  repo url: ${target_repo_url} ";
 
-                        sh "mvn deploy:deploy-file -DgroupId=${pom.groupId} -DartifactId=${pom.artifactId} -Dversion=${pom.version} -Dpackaging=${mulePackageType} -Dfile=${artifactPath} -DrepositoryId=${NEXUS_SNAPSHOT_REPOSITORY} -Durl=${NEXUS_SNAPSHOT_REPOSITORY_URL} -DgeneratePom=false -Dmaven.install.skip=true"
+                        sh "mvn deploy:deploy-file -DgroupId=${pom.groupId} -DartifactId=${pom.artifactId} -Dversion=${pom.version} -Dpackaging=${mulePackageType} -Dfile=${artifactPath} -DrepositoryId=${target_repo_id} -Durl=${target_repo_url} -DgeneratePom=false -Dmaven.install.skip=true"
 
                     } else {
                         error "*** File: ${artifactPath}, could not be found";
