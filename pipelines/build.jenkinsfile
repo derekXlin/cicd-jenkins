@@ -50,7 +50,7 @@ pipeline {
                         branch: "master"
                     )
                 
-                )
+                }
             }
         }
         stage('Build') {
