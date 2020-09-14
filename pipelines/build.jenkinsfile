@@ -9,6 +9,7 @@ pipeline {
     parameters {
         string(name: 'git_repo', defaultValue: 'https://bitbucket.org/mulesoftapacservice/demo-employee-api.git', description: 'Where the source code is checked out from?')
         string(name: 'git_branch', defaultValue: 'develop', description: 'target branch')
+        string(name: 'git_maven_repo', defaultValue: 'https://bitbucket.org/mulesoftapacservice/demo-employee-api.git', description: 'Where the maven setting xml is checked out from?')
         string(name: 'git_credential_id', defaultValue: 'git-credentials', description: 'credentials to check out source code from GIT scm')
         string(name: 'nexus_release_repository_id', defaultValue: 'local-docker-nexus', description: 'Release Repository ID where we will upload the snapshot artifact')
         string(name: 'nexus_release_repository_url', defaultValue: 'http://nexusDocker:8081/nexus/content/repositories/releases/', description: 'Release Repository URL where we will upload the snapshot artifact')
@@ -36,6 +37,22 @@ pipeline {
 
 
     stages {
+        stagss('Pre-Build')
+        {
+            steps {
+                sh 'mkdir -p mavenSettings'
+                dir("mavenSettings")
+                {
+                    // Get some code from a GitHub repository
+                    git (
+                        url: "${params.git_maven_repo}",
+                        credentialsId: "${params.git_credential_id}",
+                        branch: "master"
+                }
+                
+                )
+            }
+        }
         stage('Build') {
             steps {
                 // Get some code from a GitHub repository
