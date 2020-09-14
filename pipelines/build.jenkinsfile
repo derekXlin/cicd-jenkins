@@ -48,7 +48,7 @@ pipeline {
                         url: "${params.git_maven_repo}",
                         credentialsId: "${params.git_credential_id}",
                         branch: "master"
-                }
+                    )
                 
                 )
             }
