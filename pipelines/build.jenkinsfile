@@ -18,7 +18,7 @@ pipeline {
     }
 
 
-    environment {
+    //environment {
         //Jenkins credential id to authenticate to GIT Lab
         // GIT_CREDENTIAL_ID = "bitbucket-credentials"
         // Jenkins credential id to authenticate to Nexus OSS
@@ -32,7 +32,7 @@ pipeline {
         // Repository where we will upload the snapshot artifact
         // NEXUS_SNAPSHOT_REPOSITORY_URL = "http://nexusDocker:8081/nexus/content/repositories/snapshots/"
 
-    }
+    //}
 
 
     stages {
