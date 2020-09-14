@@ -9,23 +9,28 @@ pipeline {
     parameters {
         string(name: 'git_repo', defaultValue: 'https://bitbucket.org/mulesoftapacservice/demo-employee-api.git', description: 'Where the source code is checked out from?')
         string(name: 'git_branch', defaultValue: 'develop', description: 'target branch')
+        string(name: 'git_credential_id', defaultValue: 'git-credentials', description: 'credentials to check out source code from GIT scm')
+        string(name: 'nexus_release_repository_id', defaultValue: 'local-docker-nexus', description: 'Release Repository ID where we will upload the snapshot artifact')
+        string(name: 'nexus_release_repository_url', defaultValue: 'http://nexusDocker:8081/nexus/content/repositories/releases/', description: 'Release Repository URL where we will upload the snapshot artifact')
+        string(name: 'nexus_snapshot_repository_id', defaultValue: 'local-docker-nexus-snapshots', description: 'Snapshot Repository ID where we will upload the snapshot artifact')
+        string(name: 'nexus_snapshot_repository_url', defaultValue: 'http://nexusDocker:8081/nexus/content/repositories/snapshot/', description: 'Snapshot Repository URL where we will upload the snapshot artifact')
 
     }
 
 
     environment {
         //Jenkins credential id to authenticate to GIT Lab
-        GIT_CREDENTIAL_ID = "bitbucket-credentials"
+        // GIT_CREDENTIAL_ID = "bitbucket-credentials"
         // Jenkins credential id to authenticate to Nexus OSS
-        NEXUS_CREDENTIAL_ID = "nexus-credentials"
+        // NEXUS_CREDENTIAL_ID = "nexus-credentials"
         // Repository where we will upload the snapshot artifact
-        NEXUS_RELEASE_REPOSITORY_ID = "local-docker-nexus"
+        // NEXUS_RELEASE_REPOSITORY_ID = "local-docker-nexus"
         // Repository where we will upload the snapshot artifact
-        NEXUS_RELEASE_REPOSITORY_URL = "http://nexusDocker:8081/nexus/content/repositories/releases/"
+        // NEXUS_RELEASE_REPOSITORY_URL = "http://nexusDocker:8081/nexus/content/repositories/releases/"
         // Repository where we will upload the snapshot artifact
-        NEXUS_SNAPSHOT_REPOSITORY_ID = "local-docker-nexus-snapshots"
+        // NEXUS_SNAPSHOT_REPOSITORY_ID = "local-docker-nexus-snapshots"
         // Repository where we will upload the snapshot artifact
-        NEXUS_SNAPSHOT_REPOSITORY_URL = "http://nexusDocker:8081/nexus/content/repositories/snapshots/"
+        // NEXUS_SNAPSHOT_REPOSITORY_URL = "http://nexusDocker:8081/nexus/content/repositories/snapshots/"
 
     }
 
@@ -36,7 +41,7 @@ pipeline {
                 // Get some code from a GitHub repository
                 git (
                     url: "${params.git_repo}",
-                    credentialsId: "${GIT_CREDENTIAL_ID}",
+                    credentialsId: "${params.git_credential_id}",
                     branch: "${params.git_branch}"
                 
                 )
@@ -70,8 +75,8 @@ pipeline {
                     //mule packaging type
                     mulePackageType = (muleRuntimeVersion.startsWith("3.*.*")) ? "zip": "jar"
                     echo "mulePackageType=${mulePackageType}"
-                    target_repo_id = (pom.version.endsWith("SNAPSHOT"))? "${NEXUS_SNAPSHOT_REPOSITORY_ID}":"${NEXUS_RELEASE_REPOSITORY_ID}"
-                    target_repo_url = (pom.version.endsWith("SNAPSHOT"))? "${NEXUS_SNAPSHOT_REPOSITORY_URL}" : "${NEXUS_RELEASE_REPOSITORY_URL}"
+                    target_repo_id = (pom.version.endsWith("SNAPSHOT"))? "${params.nexus_snapshot_repository_id}":"${params.nexus_release_repository_id}"
+                    target_repo_url = (pom.version.endsWith("SNAPSHOT"))? "${params.nexus_snapshot_repository_url}" : "${params.nexus_release_repository_url}"
                     // Find built artifact under target folder
                     filesByGlob = findFiles(glob: "target/*.${mulePackageType}");
                     // Print some info from the artifact found
