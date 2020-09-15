@@ -1,0 +1,61 @@
+pipeline {
+  
+  agent any
+  
+  parameters {
+    string(name: 'groupId', defaultValue: 'com.mulesoft.service', description: 'target groupId for the artifact to be downloaded from artifact repository')
+    string(name: 'artefact', defaultValue: 'system-location-app', description: 'target artefactId for the artifact to be downloaded from artifact repository')
+    string(name: 'version', defaultValue: '1.0.0-SNAPSHOT', description: 'target version for the artifact to be downloaded from artifact repository')
+    choice(name: 'envioronment', choices: ['Development', 'QA', 'Production'], description: 'Environment')
+    string(name: 'git_maven_repo', defaultValue: 'https://bitbucket.org/derekxlin/cicd-maven.git', description: 'Where the cicd settings for the deployment')
+    string(name: 'git_credential_id', defaultValue: 'bitbucket-credentials', description: 'credentials to check out cicd settings')
+
+}
+
+  stages {
+
+    stage('Pre-Deploy')
+    {
+        steps {
+            sh 'mkdir -p cicdSettings'
+            dir("cicdSettings")
+            {
+                // Get some code from a GitHub repository
+                git (
+                    url: "${params.git_maven_repo}",
+                    credentialsId: "${params.git_credential_id}",
+                    branch: "master"
+                )
+            
+            }
+        }
+        }
+    
+    stage('Copy Release from Artifact Management Repository') {
+        steps {
+            script {
+                echo "Copying the ${params.version} artifact from the artifact repository..."
+
+                pom = readMavenPom()
+                echo "POM groupId: ${params.groupId}"
+                echo "POM artifactId: ${params.artifactId}"
+                echo "Release: ${params.version}"
+                echo "Current Build Number: ${currentBuild.number}"
+                
+                sh "mvn -s cicdSettings/settings.xml org.apache.maven.plugins:maven-dependency-plugin:3.1.1:copy -Dartifact=${params.groupId}:${params.artifactId}:${params.version}:zip -DoutputDirectory=/tmp/apps"
+                
+            }
+        }
+        post {
+            success {
+                echo "...Artifact Version ${params.version} Checkout Succeeded: ${currentBuild.currentResult}"
+            } 
+            unsuccessful {
+                echo "...Artifact Version ${params.version} Checkout Failed: ${currentBuild.currentResult}"
+            }
+        }
+    }
+    
+  }
+  
+}
