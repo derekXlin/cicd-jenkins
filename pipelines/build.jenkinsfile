@@ -90,7 +90,7 @@ pipeline {
                     muleRuntimeVersion = pom.properties.'mule.version' ?: pom.properties.'app.runtime'
                     echo "muleRuntimeVersion=${muleRuntimeVersion}"
                     //mule packaging type
-                    mulePackageType = (muleRuntimeVersion.startsWith("3.*.*")) ? "zip": "jar"
+                    mulePackageType = (muleRuntimeVersion.startsWith("3.")) ? "zip": "jar"
                     echo "mulePackageType=${mulePackageType}"
                     target_repo_id = (pom.version.endsWith("SNAPSHOT"))? "${params.nexus_snapshot_repository_id}":"${params.nexus_release_repository_id}"
                     target_repo_url = (pom.version.endsWith("SNAPSHOT"))? "${params.nexus_snapshot_repository_url}" : "${params.nexus_release_repository_url}"
