@@ -40,8 +40,8 @@ pipeline {
         stage('Pre-Build')
         {
             steps {
-                sh 'mkdir -p mavenSettings'
-                dir("mavenSettings")
+                sh 'mkdir -p cicdSettings'
+                dir("cicdSettings")
                 {
                     // Get some code from a GitHub repository
                     git (
@@ -64,7 +64,7 @@ pipeline {
                 )
 
                 // Run Maven on a Unix agent.
-                sh "mvn -U -X clean package -Dmule.env=local -s mavenSettings/settings.xml"
+                sh "mvn -U -X clean package -Dmule.env=local -s cicdSettings/settings.xml"
 
                 // To run Maven on a Windows agent, use
                 // bat "mvn -Dmaven.test.failure.ignore=true clean package"
@@ -105,7 +105,7 @@ pipeline {
                     if(artifactExists) {
                         echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version: ${pom.version} repo: ${target_repo_id}  repo url: ${target_repo_url} ";
 
-                        sh "mvn deploy:deploy-file -DgroupId=${pom.groupId} -DartifactId=${pom.artifactId} -Dversion=${pom.version} -Dpackaging=${mulePackageType} -Dfile=${artifactPath} -DrepositoryId=${target_repo_id} -Durl=${target_repo_url} -DgeneratePom=false -Dmaven.install.skip=true -s mavenSettings/settings.xml"
+                        sh "mvn deploy:deploy-file -DgroupId=${pom.groupId} -DartifactId=${pom.artifactId} -Dversion=${pom.version} -Dpackaging=${mulePackageType} -Dfile=${artifactPath} -DrepositoryId=${target_repo_id} -Durl=${target_repo_url} -DgeneratePom=false -Dmaven.install.skip=true -s cicdSettings/settings.xml"
 
                     } else {
                         error "*** File: ${artifactPath}, could not be found";
