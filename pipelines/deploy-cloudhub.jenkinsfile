@@ -36,7 +36,6 @@ pipeline {
             script {
                 echo "Copying the ${params.version} artifact from the artifact repository..."
 
-                pom = readMavenPom()
                 echo "POM groupId: ${params.groupId}"
                 echo "POM artifactId: ${params.artifactId}"
                 echo "Release: ${params.version}"
