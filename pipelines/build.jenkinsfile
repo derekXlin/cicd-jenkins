@@ -64,7 +64,7 @@ pipeline {
                 )
 
                 // Run Maven on a Unix agent.
-                sh "mvn clean package -Dmule.env=local -s mavenSettings/settings.xml"
+                sh "mvn -U clean package -Dmule.env=local -s mavenSettings/settings.xml"
 
                 // To run Maven on a Windows agent, use
                 // bat "mvn -Dmaven.test.failure.ignore=true clean package"
